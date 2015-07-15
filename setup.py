@@ -10,6 +10,7 @@ def read(f):
 setuptools.setup(
     name='polkadots_dotfile_manager',
     version='0.0.1',
+    packages = setuptools.find_packages(),
     author='lf',
     author_email=base64.b64decode(b'cH10aG9uQGxmY29kZS5jYQ==').decode(),
     description='Yet another dotfile manager',
