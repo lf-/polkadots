@@ -4,7 +4,7 @@ import base64
 
 def read(f):
     with open(f) as h:
-        return f.read()
+        return h.read()
 
 
 setuptools.setup(
