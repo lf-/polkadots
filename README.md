@@ -10,7 +10,7 @@ A giant pile of features. That being said, this is extensible and will probably 
 
 - [ ] World domination
 
-- [ x ] Config directories
+- [x] Config directories
 
 ##How to use the damn thing
 
