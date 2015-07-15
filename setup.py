@@ -22,7 +22,7 @@ setuptools.setup(
         'console_scripts': [
             'polkadots = polkadots:main'
         ]
-    }
+    },
 
     classifiers = [
         'Development Status :: 3 - Alpha',
