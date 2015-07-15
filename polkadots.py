@@ -93,7 +93,6 @@ def load_conf(f):
         for name in os.listdir(f):
             with open(name) as h:
                 conf.update(json.loads(h.read()))
-                h.close()
     else:
         with open(f) as h:
             conf.update(json.loads(h.read()))
@@ -122,7 +121,7 @@ def get_config(config=CONFIG_LOCATION):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+def main():
     ap = argparse.ArgumentParser(description='Yet another dotfile manager')
     ap.add_argument('--verbose', '-v', action='count', default=0)
     ap.add_argument('--config', '-c', help='Config to use rather than the '
@@ -142,3 +141,7 @@ if __name__ == '__main__':
     actions = get_actions(conf['actions'])
     for action in actions:
         action.execute()
+
+
+if __name__ == '__main__':
+    main()
