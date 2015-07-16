@@ -14,7 +14,7 @@ setuptools.setup(
     author='lf',
     author_email=base64.b64decode(b'cH10aG9uQGxmY29kZS5jYQ==').decode(),
     description='Yet another dotfile manager',
-    long_description = read('README.md'),
+    long_description = read('README.rst'),
     license='MIT',
     url='https://github.com/lf-/polkadots',
     keywords='dotfiles',
