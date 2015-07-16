@@ -21,11 +21,14 @@ class NotALinkError(Exception):
 
 class Action(metaclass=abc.ABCMeta):
 
-    def __init__(self, **args):
+    def __init__(self, dotfile_repo, **args):
         """
         Instantiate an Action.
 
-        Arguments:
+        Positional arguments:
+        The dotfile repository
+
+        Keyword arguments:
         Whatever's in the config file for this Action
         """
         pass
@@ -39,9 +42,13 @@ class Action(metaclass=abc.ABCMeta):
 
 class SymlinkAction(Action):
 
-    def __init__(self, **args):
+    def __init__(self, dotfile_repo, **args):
         """
         Instantiate a SymlinkAction
+
+        Positional arguments:
+        dotfile_repo -- the dotfile repository. Make everything relative to
+                        this.
 
         Keyword Arguments:
         dir_mode -- symlink everything in the source directory to the same
@@ -50,8 +57,9 @@ class SymlinkAction(Action):
         destination -- destination file/directory
         """
         self.dir_mode = args.get('dir_mode', False)
-        self.source = get_intuitive_path(args['source'])
-        self.destination = get_intuitive_path(args['destination'])
+        self.source = get_intuitive_path(args['source'], base=dotfile_repo)
+        self.destination = get_intuitive_path(args['destination'],
+                                              base=dotfile_repo)
 
     def execute(self):
         if self.dir_mode:
@@ -64,9 +72,11 @@ class SymlinkAction(Action):
 
 
 def rmlink(link, ignore_absent=False):
-    if os.path.exists(link) and os.path.islink(link):
+    if os.path.islink(link):
+        logging.info('Deleting {}'.format(link))
         os.remove(link)
     elif not os.path.exists(link):
+        logging.debug('File missing when trying to delete {}'.format(link))
         if not ignore_absent:
             raise FileNotFoundError('{} when attempting to delete it as '
                                     'a link'.format(link))
@@ -76,10 +86,11 @@ def rmlink(link, ignore_absent=False):
                             'move this file'.format(link))
 
 
-def get_intuitive_path(path):
+def get_intuitive_path(path, base='.'):
     """
     Take a path and get the absolute, user expanded, variable expanded version
     """
+    os.chdir(os.path.abspath(os.path.expanduser(os.path.expandvars(base))))
     return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
 
 
@@ -100,13 +111,13 @@ def load_conf(f):
     return conf
 
 
-def get_actions(action_list):
+def get_actions(action_list, dotfile_repo):
     actions = []
     for action in action_list:
         try:
             logging.info('Processing {}'.format(action['type']))
             klass = getattr(sys.modules[__name__], action['type'])
-            actions.append(klass(**action))
+            actions.append(klass(dotfile_repo=dotfile_repo, **action))
         except:
             logging.error('Error creating Action {}. It might not be '
                           'implemented'.format(action['type']))
@@ -115,7 +126,10 @@ def get_actions(action_list):
 
 
 def get_config(config=CONFIG_LOCATION):
-    if os.path.isfile(config):
+    if not config:
+        config = CONFIG_LOCATION
+    if os.path.exists(config) and os.path.isfile(config):
+        logging.info('Loading config from {}'.format(config))
         return load_conf(config)
     else:
         logging.error('No config found in {}'.format(config))
@@ -144,7 +158,7 @@ def main():
     logging.basicConfig(level=log_level)
 
     conf = get_config(args.config)
-    actions = get_actions(conf['actions'])
+    actions = get_actions(conf['actions'], conf['dotfile_repo'])
     for action in actions:
         action.execute()
 
