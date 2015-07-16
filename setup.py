@@ -2,7 +2,7 @@ import setuptools
 import base64
 
 
-PKG_VERSION = '0.0.3'
+PKG_VERSION = '0.0.4'
 
 
 def read(f):

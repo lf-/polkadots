@@ -64,8 +64,10 @@ class SymlinkAction(Action):
     def execute(self):
         if self.dir_mode:
             for f in os.listdir(self.source):
-                rmlink(self.destination, ignore_absent=True)
-                os.symlink(f, os.path.join(self.destination, f))
+                fdest = os.path.join(self.destination, f)
+                fsource = os.path.join(self.source, f)
+                rmlink(fdest, ignore_absent=True)
+                os.symlink(fsource, fdest)
         else:
             rmlink(self.destination, ignore_absent=True)
             os.symlink(self.source, self.destination)
