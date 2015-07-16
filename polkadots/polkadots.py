@@ -5,6 +5,7 @@ import os.path
 import abc
 import argparse
 import logging
+from . import version
 
 
 CONFIG_LOCATION = os.path.expanduser('~/.config/polkadots/config.json')
@@ -126,7 +127,12 @@ def main():
     ap.add_argument('--verbose', '-v', action='count', default=0)
     ap.add_argument('--config', '-c', help='Config to use rather than the '
                     'default. Can be a directory')
+    ap.add_argument('--version', action='store_true')
     args = ap.parse_args()
+
+    if args.version:
+        print(version.version)
+        sys.exit(0)
 
     log_level = logging.WARNING
 

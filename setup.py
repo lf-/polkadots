@@ -2,14 +2,22 @@ import setuptools
 import base64
 
 
+PKG_VERSION = '0.0.2'
+
+
 def read(f):
     with open(f) as h:
         return h.read()
 
+# put the version in version.py
+
+with open('polkadots/version.py', 'w') as h:
+    h.write('version = \'{}\''.format(PKG_VERSION))
+
 
 setuptools.setup(
     name='polkadots_dotfile_manager',
-    version='0.0.1',
+    version=PKG_VERSION,
     packages = setuptools.find_packages(),
     author='lf',
     author_email=base64.b64decode(b'cH10aG9uQGxmY29kZS5jYQ==').decode(),
