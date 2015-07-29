@@ -8,7 +8,8 @@ import logging
 from . import version
 
 
-CONFIG_LOCATION = os.path.expanduser('~/.config/polkadots/config.json')
+CONFIG_DIRECTORY = os.path.expanduser('~/.config/polkadots')
+CONFIG_LOCATION = os.path.join(CONFIG_DIRECTORY, 'config.json')
 
 
 class MissingActionError(Exception):
@@ -143,6 +144,8 @@ def main():
     ap.add_argument('--verbose', '-v', action='count', default=0)
     ap.add_argument('--config', '-c', help='Config to use rather than the '
                     'default. Can be a directory')
+    ap.add_argument('--profile', '-p', help='Like --config, except it loads'
+                    'a profile from the polkadots/profiles directory')
     ap.add_argument('--version', action='store_true')
     args = ap.parse_args()
 
@@ -159,7 +162,11 @@ def main():
 
     logging.basicConfig(level=log_level)
 
-    conf = get_config(args.config)
+    if args.profile:
+        conf = get_config(os.path.join(CONFIG_DIRECTORY, 'profiles',
+                          args.profile))
+    else:
+        conf = get_config(args.config)
     actions = get_actions(conf['actions'], conf['dotfile_repo'])
     for action in actions:
         action.execute()
