@@ -2,6 +2,7 @@ import json
 import sys
 import os
 import os.path
+import shutil
 import abc
 import argparse
 import logging
@@ -41,26 +42,78 @@ class Action(metaclass=abc.ABCMeta):
         pass
 
 
+class CopyAction(Action):
+    """
+    An action that copies files and optionally overwrites them
+    """
+
+    def __init__(self, dotfile_repo, source, destination, dir_mode=False,
+                 overwrite=False, **kwargs):
+        """
+        Create a CopyAction
+
+        Positional arguments:
+        dotfile_repo -- dotfile repository to use for relative paths
+        source -- source file/directory
+        destination -- destination file/directory
+
+        Keyword arguments:
+        overwrite -- overwrite files or print a message?
+        dir_mode -- symlink everything in the source directory to the same
+                    names in the destination directory?
+        """
+        self.source = get_intuitive_path(source, base=dotfile_repo)
+        self.destination = get_intuitive_path(destination,
+                                              base=dotfile_repo)
+        self.dotfile_repo = dotfile_repo
+        self.overwrite = overwrite
+        self.dir_mode = dir_mode
+
+    def execute(self):
+        files = []
+        if self.dir_mode:
+            files.extend((os.path.join(self.source, f)
+                          for f in os.listdir(self.source)))
+        else:
+            files.append(self.source)
+        for f in files:
+            if os.path.isdir(self.destination):
+                if os.path.exists(os.path.join(self.destination,
+                                  os.path.basename(f))) and not \
+                                  self.overwrite:
+                    logging.warning('Skipping file {} because overwrite '
+                                    'is False and it exists in the '
+                                    'destination'.format(f))
+                    continue
+            else:
+                if os.path.exists(self.destination) and not self.overwrite:
+                    logging.warning('Skipping file {} because overwrite is '
+                                    'False'.format(f))
+                    continue
+            shutil.copy(f, self.destination)
+
+
 class SymlinkAction(Action):
 
-    def __init__(self, dotfile_repo, **args):
+    def __init__(self, dotfile_repo, source, destination, dir_mode=False,
+                 **args):
         """
         Instantiate a SymlinkAction
 
         Positional arguments:
         dotfile_repo -- the dotfile repository. Make everything relative to
                         this.
+        source -- source file/directory
+        destination -- destination file/directory
 
         Keyword Arguments:
         dir_mode -- symlink everything in the source directory to the same
                     names in the destination directory?
-        source -- source file/directory
-        destination -- destination file/directory
         """
-        self.dir_mode = args.get('dir_mode', False)
-        self.source = get_intuitive_path(args['source'], base=dotfile_repo)
-        self.destination = get_intuitive_path(args['destination'],
+        self.source = get_intuitive_path(source, base=dotfile_repo)
+        self.destination = get_intuitive_path(destination,
                                               base=dotfile_repo)
+        self.dir_mode = dir_mode
 
     def execute(self):
         if self.dir_mode:
