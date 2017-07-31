@@ -24,33 +24,45 @@ Install it:
 
 ``pip install polkadots-dotfile-manager``
 
-Make a polkadots config file in .config/polkadots/config.json:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+For development:
 
-Example:
+``pip install --user -e .``
 
-.. code:: json
+Make a polkadots config directory in .config/polkadots:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    {
-        "dotfile_repo": "~/.dotfiles",
-        "actions": [
-            {
-                "type": "SymlinkAction",
-                "source": "derpityapp",
-                "destination": "~/.config/derp"
-            },
-            {
-                "type": "SymlinkAction",
-                "source": "main",
-                "destination": "~",
-                "dir_mode": true
-            }
-        ]
-    }
+Basic example:
 
-This configuration makes two actions. The first one symlinks the entire
-derpityapp directory (but it could also do files the same).
+``~/.config/polkadots/config.py``:
+
+.. code-block:: python
+
+    actions = [
+        SymlinkAction('aiopanel', '~/.config/aiopanel'),
+        SymlinkAction('main', '~', dir_mode=True),
+    ]
+
+``~/.config/polkadots/dotfile_repo``:
+
+.. code-block:: text
+
+    ~/.dotfiles
+
+This configuration executes two actions. The first one symlinks the entire
+aiopanel directory (files are also supported of course).
 
 The second one goes through every item in the "main" folder in the
 dotfile repo and symlinks them all into the destination directory. For
 example, the file .vimrc in main would be symlinked to ~/.vimrc.
+
+Run it:
+~~~~~~~
+
+``polkadots --config2 -v``
+
+Options used:
+
+- ``--config2`` -- enables the new python-based config format.
+  ``-2`` is an alias for this.
+- ``-v`` -- verbose logging
+
