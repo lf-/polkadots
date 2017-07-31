@@ -24,6 +24,7 @@ setuptools.setup(
     license='MIT',
     url='https://github.com/lf-/polkadots',
     keywords='dotfiles',
+    python_requires='>=3.6',
 
     entry_points={
         'console_scripts': [
@@ -36,6 +37,7 @@ setuptools.setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX :: Linux',
-        'Topic :: Utilities'
+        'Topic :: Utilities',
+        'Programming Language :: Python :: 3.6',
     ]
 )
