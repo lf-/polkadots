@@ -1,23 +1,13 @@
-Polkadots is a small dotfile manager
-====================================
+Polkadots dotfile manager
+=========================
 
-What not to expect
-------------------
+This is a simple dotfile manager. You could use home-manager or other things,
+but this is mine. Despite its simplicity, the deliberately Turing-complete
+nature of its Python based config files allows for highly dynamic
+behaviour.
 
-A giant pile of features. That being said, this is extensible and will
-probably get some sort of plugin support.
-
-Future plans
-------------
-
--  [ ] Plugin support
-
--  [ ] World domination
-
--  [x] Config directories
-
-How to use the damn thing
--------------------------
+How to use it
+-------------
 
 Install it:
 ~~~~~~~~~~~
@@ -49,7 +39,7 @@ Basic example:
     ~/.dotfiles
 
 This configuration executes two actions. The first one symlinks the entire
-aiopanel directory (files are also supported of course).
+aiopanel directory (files are also supported).
 
 The second one goes through every item in the "main" folder in the
 dotfile repo and symlinks them all into the destination directory. For
