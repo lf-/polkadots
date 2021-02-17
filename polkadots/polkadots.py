@@ -137,6 +137,30 @@ class SymlinkAction(Action):
             logging.info('Linked %s to %s', self.source, self.destination)
 
 
+class CatAction(Action):
+    def __init__(self, dotfile_repo, destination, *sources, **args):
+        """
+        Concatenate n files together. Overwrites the destination file.
+        Meow.
+
+        Positional arguments:
+        dotfile_repo -- the dotfile repository. Make everything relative to
+                        this.
+        destination  -- destination file/directory
+        *sources     -- any number of source files that will be in the provided
+                        order
+        """
+        self.sources = [get_intuitive_path(source, base=dotfile_repo)
+                        for source in sources]
+        self.destination = get_intuitive_path(destination, base=dotfile_repo)
+
+    def execute(self):
+        with open(self.destination, 'wb') as out:
+            for src in self.sources:
+                with open(src, 'rb') as h:
+                    out.write(h.read())
+
+
 def rmlink(link, ignore_absent=False):
     if os.path.islink(link):
         logging.info('Deleting {}'.format(link))
