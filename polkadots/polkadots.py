@@ -289,7 +289,7 @@ def load_conf2(config_dir: Path) -> Dict:
     f = config_dir / "config.py"
     actions = Action.__subclasses__()
     conf_globals = {a.__name__: functools.partial(a, dotfile_repo) for a in actions}
-    conf = runpy.run_path(f, init_globals=conf_globals)
+    conf = runpy.run_path(str(f), init_globals=conf_globals)
     return conf
 
 
