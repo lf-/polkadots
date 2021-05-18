@@ -1,15 +1,17 @@
 import abc
 import argparse
 import functools
+import glob
 import json
 import logging
 import os
 import os.path
-from pathlib import Path
+import runpy
 import shutil
 import sys
-from typing import Callable, cast, Dict, List, Optional
-import runpy
+
+from pathlib import Path
+from typing import Dict, Optional
 
 from . import version
 
@@ -42,11 +44,16 @@ class Action(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
     def execute(self):
         """
         Execute an action and throw an exception if it fails
         """
         pass
+
+    def __repr__(self):
+        fields = ", ".join("{}={}".format(k, v) for k, v in self.__dict__.items())
+        return f"{self.__class__.__name__}({fields})"
 
 
 class CopyAction(Action):
@@ -139,7 +146,7 @@ class SymlinkAction(Action):
         Positional arguments:
         dotfile_repo -- the dotfile repository. Make everything relative to
                         this.
-        source -- source file/directory
+        source -- source file/directory glob
         destination -- destination file/directory
 
         Keyword Arguments:
@@ -151,17 +158,24 @@ class SymlinkAction(Action):
         self.dir_mode = dir_mode
 
     def execute(self):
+        def symlink_replacing(src: Path, dest: Path):
+            rmlink(dest, ignore_absent=True)
+            os.symlink(src, dest)
+            logging.info("Linked %s to %s", src, dest)
+
         if self.dir_mode:
             for f in os.listdir(self.source):
-                fdest = os.path.join(self.destination, f)
-                fsource = os.path.join(self.source, f)
-                rmlink(fdest, ignore_absent=True)
-                os.symlink(fsource, fdest)
-                logging.info("Linked %s to %s", fsource, fdest)
+                fdest = self.destination / f
+                fsource = self.source / f
+                symlink_replacing(fsource, fdest)
         else:
-            rmlink(self.destination, ignore_absent=True)
-            os.symlink(self.source, self.destination)
-            logging.info("Linked %s to %s", self.source, self.destination)
+            is_dir = self.destination.is_dir() and not self.destination.is_symlink()
+            if is_dir:
+                for f in glob.glob(str(self.source)):
+                    dest = self.destination / Path(f).name
+                    symlink_replacing(Path(f), dest)
+            else:
+                symlink_replacing(self.source, self.destination)
 
 
 class CatAction(Action):
@@ -211,12 +225,9 @@ def get_intuitive_path(path, base="."):
     """
     Take a path and get the absolute, user expanded, variable expanded version
     """
-    # XXX: this is cursed
-    cwd = os.getcwd()
-    os.chdir(os.path.abspath(os.path.expanduser(os.path.expandvars(base))))
-    ret = os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
-    os.chdir(cwd)
-    return ret
+    normbase = Path(os.path.expandvars(base)).expanduser().resolve(strict=True)
+    normpath = Path(os.path.expandvars(path)).expanduser()
+    return normbase / normpath
 
 
 def load_conf(f):
@@ -252,7 +263,7 @@ def get_actions(action_list, dotfile_repo):
     return actions
 
 
-def get_config(config: str):
+def get_config(config: Path):
     if os.path.exists(config) and os.path.isfile(config):
         logging.info("Loading config from {}".format(config))
         return load_conf(config)
@@ -297,7 +308,7 @@ def get_config_path(
     basedir: Path = CONFIG_DIRECTORY,
     profile_name: Optional[str] = None,
     config2: bool = False,
-) -> str:
+) -> Path:
     """
     Find the correct path to pull a config from
 
@@ -335,11 +346,17 @@ def main():
         help="Like --config, except it loads "
         "a profile from the polkadots/profiles directory",
     )
+    ap.add_argument(
+        "--dry-run",
+        "-d",
+        help="Don't execute any actions. Use -vv to see them.",
+        action="store_true",
+    )
     ap.add_argument("--version", action="store_true")
     args = ap.parse_args()
 
     if args.version:
-        print(version.version)
+        print(version)
         sys.exit(0)
 
     log_level = logging.WARNING
@@ -360,7 +377,9 @@ def main():
         actions = get_actions(conf["actions"], conf["dotfile_repo"])
 
     for action in actions:
-        action.execute()
+        logging.debug("Exec %r", action)
+        if not args.dry_run:
+            action.execute()
 
 
 if __name__ == "__main__":
